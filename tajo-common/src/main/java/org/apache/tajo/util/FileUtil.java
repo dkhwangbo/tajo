@@ -34,19 +34,15 @@ import java.nio.charset.Charset;
 public class FileUtil {
 
   public static String readTextFile(File file) throws IOException {
-    StringBuilder fileData = new StringBuilder(1000);
-    BufferedReader reader = new BufferedReader(new FileReader(file));
-    char[] buf = new char[1024];
-    int numRead;
-    try {
-      while ((numRead = reader.read(buf)) != -1) {
-        String readData = String.valueOf(buf, 0, numRead);
-        fileData.append(readData);
-        buf = new char[1024];
+    StringBuilder fileData = new StringBuilder();
+
+    try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+      String readData;
+      while ((readData = reader.readLine()) != null) {
+        fileData.append(readData).append(" ");
       }
-    } finally {
-      IOUtils.cleanup(null, reader);
     }
+
     return fileData.toString();
   }
 
