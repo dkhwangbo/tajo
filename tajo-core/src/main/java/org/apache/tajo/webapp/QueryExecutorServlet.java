@@ -205,9 +205,7 @@ public class QueryExecutorServlet extends HttpServlet {
         }
       } else if("clearAllQueryRunner".equals(action)) {
         synchronized(queryRunners) {
-          for(QueryRunner eachQueryRunner: queryRunners.values()) {
-            eachQueryRunner.setStop();
-          }
+          queryRunners.values().forEach(QueryRunner::setStop);
           queryRunners.clear();
         }
       } else if("killQuery".equals(action)) {
@@ -262,12 +260,10 @@ public class QueryExecutorServlet extends HttpServlet {
       List<QueryRunner> queryRunnerList;
       synchronized(queryRunners) {
         queryRunnerList = new ArrayList<>(queryRunners.values());
-        for(QueryRunner eachQueryRunner: queryRunnerList) {
-          if(!eachQueryRunner.running.get() &&
-              (System.currentTimeMillis() - eachQueryRunner.finishTime > 180 * 1000)) {
-            queryRunners.remove(eachQueryRunner.queryRunnerId);
-          }
-        }
+        queryRunnerList.stream().filter(eachQueryRunner -> !eachQueryRunner.running.get() &&
+          (System.currentTimeMillis() - eachQueryRunner.finishTime > 180 * 1000)).forEach(eachQueryRunner -> {
+          queryRunners.remove(eachQueryRunner.queryRunnerId);
+        });
       }
     }
   }

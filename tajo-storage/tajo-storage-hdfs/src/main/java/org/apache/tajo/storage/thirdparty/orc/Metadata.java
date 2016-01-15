@@ -21,6 +21,7 @@ package org.apache.tajo.storage.thirdparty.orc;
 import com.google.common.collect.Lists;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Metadata {
 
@@ -37,9 +38,7 @@ public class Metadata {
    */
   public List<StripeStatistics> getStripeStatistics() {
     List<StripeStatistics> result = Lists.newArrayList();
-    for (OrcProto.StripeStatistics ss : metadata.getStripeStatsList()) {
-      result.add(new StripeStatistics(ss.getColStatsList()));
-    }
+    result.addAll(metadata.getStripeStatsList().stream().map(ss -> new StripeStatistics(ss.getColStatsList())).collect(Collectors.toList()));
     return result;
   }
 }

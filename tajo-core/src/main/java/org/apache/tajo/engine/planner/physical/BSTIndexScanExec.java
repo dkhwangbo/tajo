@@ -99,11 +99,7 @@ public class BSTIndexScanExec extends ScanExec {
     for (Target target : targets) {
       qualAndTargets.addAll(EvalTreeUtil.findUniqueColumns(target.getEvalTree()));
     }
-    for (Column column : originalSchema.getRootColumns()) {
-      if (subSchema.contains(column) || qualAndTargets.contains(column)) {
-        mergedSchema.addColumn(column);
-      }
-    }
+    originalSchema.getRootColumns().stream().filter(column -> subSchema.contains(column) || qualAndTargets.contains(column)).forEach(mergedSchema::addColumn);
     return mergedSchema;
   }
 
@@ -142,11 +138,7 @@ public class BSTIndexScanExec extends ScanExec {
         columnSet.addAll(EvalTreeUtil.findUniqueColumns(t.getEvalTree()));
       }
 
-      for (Column column : inSchema.getAllColumns()) {
-        if (columnSet.contains(column)) {
-          projected.addColumn(column);
-        }
-      }
+      inSchema.getAllColumns().stream().filter(column -> columnSet.contains(column)).forEach(projected::addColumn);
 
     } else {
       // no any projected columns, meaning that all columns should be projected.

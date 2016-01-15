@@ -74,6 +74,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static org.apache.tajo.ResourceProtos.*;
 import static org.apache.tajo.conf.TajoConf.ConfVars;
@@ -484,9 +486,7 @@ public class Stage implements EventHandler<StageEvent> {
     }
 
     Set<Integer> partitions = Sets.newHashSet();
-    for (IntermediateEntry entry : getHashShuffleIntermediateEntries()) {
-       partitions.add(entry.getPartId());
-    }
+    partitions.addAll(getHashShuffleIntermediateEntries().stream().map((Function<IntermediateEntry, int>) IntermediateEntry::getPartId).collect(Collectors.toList()));
 
     stageHistory.setTotalInputBytes(totalInputBytes);
     stageHistory.setTotalReadBytes(totalReadBytes);

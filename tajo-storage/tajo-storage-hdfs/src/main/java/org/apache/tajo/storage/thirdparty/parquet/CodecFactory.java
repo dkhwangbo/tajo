@@ -178,13 +178,9 @@ class CodecFactory {
   }
 
   public void release() {
-    for (BytesCompressor compressor : compressors.values()) {
-      compressor.release();
-    }
+    compressors.values().forEach(BytesCompressor::release);
     compressors.clear();
-    for (BytesDecompressor decompressor : decompressors.values()) {
-      decompressor.release();
-    }
+    decompressors.values().forEach(BytesDecompressor::release);
     decompressors.clear();
   }
 }

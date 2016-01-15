@@ -531,12 +531,10 @@ public class TestLogicalPlanner {
       }
     }
 
-    for (Map.Entry<BinaryEval, Boolean> entry : qualMap.entrySet()) {
-      if (!entry.getValue()) {
-        Preconditions.checkArgument(false,
-            "JoinQual not found. -> required JoinQual:" + entry.getKey().toJson());
-      }
-    }
+    qualMap.entrySet().stream().filter(entry -> !entry.getValue()).forEach(entry -> {
+      Preconditions.checkArgument(false,
+        "JoinQual not found. -> required JoinQual:" + entry.getKey().toJson());
+    });
   }
 
   @Test
@@ -572,12 +570,10 @@ public class TestLogicalPlanner {
       }
     }
 
-    for (Map.Entry<BinaryEval, Boolean> entry : qualMap.entrySet()) {
-      if (!entry.getValue()) {
-        Preconditions.checkArgument(false,
-            "SelectionQual not found. -> required JoinQual:" + entry.getKey().toJson());
-      }
-    }
+    qualMap.entrySet().stream().filter(entry -> !entry.getValue()).forEach(entry -> {
+      Preconditions.checkArgument(false,
+        "SelectionQual not found. -> required JoinQual:" + entry.getKey().toJson());
+    });
   }
 
   @Test
@@ -618,12 +614,10 @@ public class TestLogicalPlanner {
       }
     }
 
-    for (Map.Entry<BinaryEval, Boolean> entry : qualMap.entrySet()) {
-      if (!entry.getValue()) {
-        Preconditions.checkArgument(false,
-            "ScanQual not found. -> required JoinQual:" + entry.getKey().toJson());
-      }
-    }
+    qualMap.entrySet().stream().filter(entry -> !entry.getValue()).forEach(entry -> {
+      Preconditions.checkArgument(false,
+        "ScanQual not found. -> required JoinQual:" + entry.getKey().toJson());
+    });
   }
 
 
@@ -688,19 +682,15 @@ public class TestLogicalPlanner {
     }
 
 
-    for (Map.Entry<BinaryEval, Boolean> entry : joinQualMap.entrySet()) {
-      if (!entry.getValue()) {
-        Preconditions.checkArgument(false,
-            "JoinQual not found. -> required JoinQual:" + entry.getKey().toJson());
-      }
-    }
+    joinQualMap.entrySet().stream().filter(entry -> !entry.getValue()).forEach(entry -> {
+      Preconditions.checkArgument(false,
+        "JoinQual not found. -> required JoinQual:" + entry.getKey().toJson());
+    });
 
-    for (Map.Entry<BinaryEval, Boolean> entry : scanMap.entrySet()) {
-      if (!entry.getValue()) {
-        Preconditions.checkArgument(false,
-            "ScanQual not found. -> required JoinQual:" + entry.getKey().toJson());
-      }
-    }
+    scanMap.entrySet().stream().filter(entry -> !entry.getValue()).forEach(entry -> {
+      Preconditions.checkArgument(false,
+        "ScanQual not found. -> required JoinQual:" + entry.getKey().toJson());
+    });
   }
 
   static void testQuery7(LogicalNode plan) {

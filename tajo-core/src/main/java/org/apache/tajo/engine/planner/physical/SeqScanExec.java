@@ -153,11 +153,7 @@ public class SeqScanExec extends ScanExec {
         columnSet.addAll(EvalTreeUtil.findUniqueColumns(t.getEvalTree()));
       }
 
-      for (Column column : inSchema.getAllColumns()) {
-        if (columnSet.contains(column)) {
-          projected.addColumn(column);
-        }
-      }
+      inSchema.getAllColumns().stream().filter(column -> columnSet.contains(column)).forEach(projected::addColumn);
 
     } else {
       // no any projected columns, meaning that all columns should be projected.

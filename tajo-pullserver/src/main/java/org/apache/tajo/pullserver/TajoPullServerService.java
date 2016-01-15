@@ -713,9 +713,7 @@ public class TajoPullServerService extends AbstractService {
             removed.add(e.getKey());
           }
         }
-        for (CacheKey eachKey : removed) {
-          waitForRemove.remove(eachKey);
-        }
+        removed.forEach(waitForRemove::remove);
       }
     }
 
