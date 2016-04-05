@@ -29,9 +29,6 @@ import org.apache.hadoop.fs.shell.PathData;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.yarn.event.AsyncDispatcher;
 import org.apache.hadoop.yarn.util.RackResolver;
-import org.apache.mesos.MesosExecutorDriver;
-import org.apache.mesos.Protos;
-import org.apache.mesos.Protos.ExecutorInfo;
 import org.apache.tajo.TajoConstants;
 import org.apache.tajo.catalog.CatalogClient;
 import org.apache.tajo.catalog.CatalogService;
@@ -60,9 +57,7 @@ import org.apache.tajo.util.history.HistoryReader;
 import org.apache.tajo.util.history.HistoryWriter;
 import org.apache.tajo.util.metrics.TajoSystemMetrics;
 import org.apache.tajo.webapp.StaticHttpServer;
-import org.apache.tajo.mesos.MesosExecutor;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
@@ -74,7 +69,6 @@ import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.apache.tajo.conf.TajoConf.ConfVars;
-import static org.apache.tajo.conf.TajoConf.ConfVars.TAJO_CLUSTER_FRAMEWORK;
 
 public class TajoWorker extends CompositeService {
   public static final PrimitiveProtos.BoolProto TRUE_PROTO = PrimitiveProtos.BoolProto.newBuilder().setValue(true).build();
@@ -104,8 +98,6 @@ public class TajoWorker extends CompositeService {
   private LocalDirAllocator lDirAllocator;
   private JvmPauseMonitor pauseMonitor;
 
-  private MesosExecutorDriver mesosExecutorDriver;
-
   private HistoryWriter taskHistoryWriter;
   private HistoryReader historyReader;
 
@@ -122,29 +114,6 @@ public class TajoWorker extends CompositeService {
 
   @Override
   public void serviceInit(Configuration conf) throws Exception {
-
-    if(TAJO_CLUSTER_FRAMEWORK.equals("mesos")) {
-      serviceMesosInit(conf);
-    } else {
-      serviceWorkerInit(conf);
-    }
-  }
-
-  private void serviceMesosInit(Configuration conf) throws Exception {
-
-    String uri = new File("").getCanonicalPath();
-
-    ExecutorInfo executorInfo = ExecutorInfo.newBuilder()
-      .setExecutorId(Protos.ExecutorID.newBuilder()
-        .setValue("default"))
-      .setCommand(Protos.CommandInfo.newBuilder().setValue()).setName("TajoWokrer").setSource("java").build();
-
-    this.mesosExecutorDriver = new MesosExecutorDriver(new MesosExecutor());
-
-
-  }
-
-  private void serviceWorkerInit(Configuration conf) throws Exception {
     AsyncDispatcher dispatcher;
     TajoWorkerClientService tajoWorkerClientService;
     TajoWorkerManagerService tajoWorkerManagerService;
@@ -205,12 +174,12 @@ public class TajoWorker extends CompositeService {
     }
 
     this.connectionInfo = new WorkerConnectionInfo(
-      tajoWorkerManagerService.getBindAddr().getHostName(),
-      tajoWorkerManagerService.getBindAddr().getPort(),
-      pullServerPort,
-      tajoWorkerClientService.getBindAddr().getPort(),
-      queryMasterManagerService.getBindAddr().getPort(),
-      httpPort);
+        tajoWorkerManagerService.getBindAddr().getHostName(),
+        tajoWorkerManagerService.getBindAddr().getPort(),
+        pullServerPort,
+        tajoWorkerClientService.getBindAddr().getPort(),
+        queryMasterManagerService.getBindAddr().getPort(),
+        httpPort);
 
     LOG.info("Tajo Worker is initialized." + " connection :" + connectionInfo.toString());
 
@@ -231,7 +200,7 @@ public class TajoWorker extends CompositeService {
     HiveFunctionLoader.loadHiveUDFs(systemConf);
 
     PythonScriptEngine.initPythonScriptEngineFiles();
-
+    
     diagnoseTajoWorker();
   }
 
