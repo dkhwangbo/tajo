@@ -125,6 +125,13 @@ public class TajoConf extends Configuration {
         Validators.groups(Validators.notNull(), Validators.pathUrl())),
     USERNAME("tajo.username", "${user.name}", Validators.javaString()),
 
+    // Cluster framework
+    TAJO_CLUSTER_FRAMEWORK("tajo.cluster.framework", EMPTY_VALUE, Validators.javaString()),
+    TAJO_CLUSTER_FRAMEWORK_MASTER_ADDRESS("tajo.cluster.framework.master.address", EMPTY_VALUE, Validators.pathUrl()),
+
+    // Mesos Configuration
+    TAJO_MESOS_EXECUTOR_URI("tajo.mesos.executor.uri", EMPTY_VALUE, Validators.pathUrl()),
+
     // Configurable System Directories
     WAREHOUSE_DIR("tajo.warehouse.directory", EMPTY_VALUE, Validators.pathUrl()),
     STAGING_ROOT_DIR("tajo.staging.directory", "/tmp/tajo-${user.name}/staging", Validators.pathUrl()),
