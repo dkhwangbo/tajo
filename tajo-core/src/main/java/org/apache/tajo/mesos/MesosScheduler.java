@@ -18,63 +18,49 @@
 
 package org.apache.tajo.mesos;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.*;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
-import org.apache.tajo.QueryId;
-import org.apache.tajo.ResourceProtos;
-import org.apache.tajo.conf.TajoConf;
-import org.apache.tajo.master.QueryInfo;
-import org.apache.tajo.master.TajoMaster;
-import org.apache.tajo.master.rm.NodeStatus;
-import org.apache.tajo.master.rm.TajoRMContext;
-import org.apache.tajo.master.scheduler.AbstractQueryScheduler;
-import org.apache.tajo.master.scheduler.QuerySchedulingInfo;
-import org.apache.tajo.master.scheduler.SchedulingAlgorithms;
-import org.apache.tajo.master.scheduler.SimpleScheduler;
-import org.apache.tajo.master.scheduler.event.SchedulerEvent;
-import org.apache.tajo.resource.DefaultResourceCalculator;
-import org.apache.tajo.resource.NodeResource;
-import org.apache.tajo.resource.ResourceCalculator;
 
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.PriorityBlockingQueue;
 
-public class MesosScheduler extends AbstractQueryScheduler implements Scheduler {
+public class MesosScheduler implements Scheduler {
 
-  private final boolean implicitAcknowledgements;
   private final ExecutorInfo executor;
   private final int totalTasks;
   private int launchedTasks = 0;
   private int finishedTasks = 0;
 
   public MesosScheduler(ExecutorInfo executor) {
-    super(MesosScheduler.class.getName());
+    this(executor, 1);
+  }
 
+  public MesosScheduler(ExecutorInfo executor,
+                        int totalTasks) {
+    this.executor = executor;
+    this.totalTasks = totalTasks;
   }
 
   @Override
-  public void registered(SchedulerDriver driver, FrameworkID frameworkId, MasterInfo masterInfo) {
-
+  public void registered(SchedulerDriver driver,
+                         FrameworkID frameworkId,
+                         MasterInfo masterInfo) {
     System.out.println("Registered! ID = " + frameworkId.getValue());
   }
 
   @Override
   public void reregistered(SchedulerDriver driver, MasterInfo masterInfo) {
-
   }
 
   @Override
-  public void resourceOffers(SchedulerDriver driver, List<Offer> offers) {
-    double CPUS_PER_TASK = 1;
-    double MEM_PER_TASK = 128;
+  public void disconnected(SchedulerDriver driver) {
+  }
+
+  @Override
+  public void resourceOffers(SchedulerDriver driver,
+                             List<Offer> offers) {
+    double CPUS_PER_TASK = 2;
+    double MEM_PER_TASK = 2048;
 
     for (Offer offer : offers) {
       Offer.Operation.Launch.Builder launch = Offer.Operation.Launch.newBuilder();
@@ -126,10 +112,10 @@ public class MesosScheduler extends AbstractQueryScheduler implements Scheduler 
 
       // NOTE: We use the new API `acceptOffers` here to launch tasks. The
       // 'launchTasks' API will be deprecated.
-      List<OfferID> offerIds = new ArrayList<OfferID>();
+      List<OfferID> offerIds = new ArrayList<>();
       offerIds.add(offer.getId());
 
-      List<Offer.Operation> operations = new ArrayList<Offer.Operation>();
+      List<Offer.Operation> operations = new ArrayList<>();
 
       Offer.Operation operation = Offer.Operation.newBuilder()
         .setType(Offer.Operation.Type.LAUNCH)
@@ -146,7 +132,6 @@ public class MesosScheduler extends AbstractQueryScheduler implements Scheduler 
 
   @Override
   public void offerRescinded(SchedulerDriver driver, OfferID offerId) {
-
   }
 
   @Override
@@ -175,69 +160,30 @@ public class MesosScheduler extends AbstractQueryScheduler implements Scheduler 
       driver.abort();
     }
 
-    if (!implicitAcknowledgements) {
-      driver.acknowledgeStatusUpdate(status);
-    }
   }
 
   @Override
-  public void frameworkMessage(SchedulerDriver driver, ExecutorID executorId, SlaveID slaveId, byte[] data) {
-
-  }
-
-  @Override
-  public void disconnected(SchedulerDriver driver) {
-
+  public void frameworkMessage(SchedulerDriver driver,
+                               ExecutorID executorId,
+                               SlaveID slaveId,
+                               byte[] data) {
   }
 
   @Override
   public void slaveLost(SchedulerDriver driver, SlaveID slaveId) {
-
+    System.err.println("slaveLost is called! slaveID :" + slaveId);
   }
 
   @Override
-  public void executorLost(SchedulerDriver driver, ExecutorID executorId, SlaveID slaveId, int status) {
-
+  public void executorLost(SchedulerDriver driver,
+                           ExecutorID executorId,
+                           SlaveID slaveId,
+                           int status) {
+    System.err.println("executorLost is called!");
   }
 
-  @Override
   public void error(SchedulerDriver driver, String message) {
-    System.out.println("Error: " + message);
-
+    System.err.println("Error: " + message);
   }
 
-  @Override
-  public int getRunningQuery() {
-    return 0;
-  }
-
-  @Override
-  public ResourceCalculator getResourceCalculator() {
-    return null;
-  }
-
-  @Override
-  public void submitQuery(QuerySchedulingInfo schedulingInfo) {
-
-  }
-
-  @Override
-  public void stopQuery(QueryId queryId) {
-
-  }
-
-  @Override
-  public int getNumClusterNodes() {
-    return 0;
-  }
-
-  @Override
-  public List<ResourceProtos.AllocationResourceProto> reserve(QueryId queryId, ResourceProtos.NodeResourceRequest ask) {
-    return null;
-  }
-
-  @Override
-  public void handle(SchedulerEvent schedulerEvent) {
-
-  }
 }

@@ -130,7 +130,7 @@ public class TajoConf extends Configuration {
     TAJO_CLUSTER_FRAMEWORK_MASTER_ADDRESS("tajo.cluster.framework.master.address", EMPTY_VALUE, Validators.pathUrl()),
 
     // Mesos Configuration
-    TAJO_MESOS_EXECUTOR_URI("tajo.mesos.executor.uri", EMPTY_VALUE, Validators.pathUrl()),
+    TAJO_MESOS_URI("tajo.mesos.uri", EMPTY_VALUE, Validators.pathUrl()),
 
     // Configurable System Directories
     WAREHOUSE_DIR("tajo.warehouse.directory", EMPTY_VALUE, Validators.pathUrl()),

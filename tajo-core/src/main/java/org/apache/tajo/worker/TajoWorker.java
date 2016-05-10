@@ -66,6 +66,7 @@ import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.apache.tajo.conf.TajoConf.ConfVars;
@@ -121,6 +122,16 @@ public class TajoWorker extends CompositeService {
     ShutdownHookManager.get().addShutdownHook(new ShutdownHook(), SHUTDOWN_HOOK_PRIORITY);
 
     this.systemConf = TUtil.checkTypeAndGet(conf, TajoConf.class);
+    Arrays.stream(this.cmdArgs).forEach(arg -> {
+      if (arg.contains("cpus")) {
+        this.systemConf.setIntVar(TajoConf.ConfVars.WORKER_RESOURCE_AVAILABLE_CPU_CORES,
+          Integer.valueOf(arg.split(":")[1]));
+      } else if (arg.contains("mem")) {
+        this.systemConf.setIntVar(TajoConf.ConfVars.WORKER_RESOURCE_AVAILABLE_MEMORY_MB,
+          Integer.valueOf(arg.split(":")[1]));
+      }
+    });
+
     RackResolver.init(systemConf);
 
     serviceTracker = ServiceTrackerFactory.get(systemConf);

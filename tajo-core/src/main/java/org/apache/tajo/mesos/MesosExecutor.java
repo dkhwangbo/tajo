@@ -18,6 +18,8 @@
 
 package org.apache.tajo.mesos;
 
+import com.sun.org.apache.commons.logging.Log;
+import com.sun.org.apache.commons.logging.LogFactory;
 import org.apache.mesos.Executor;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.MesosExecutorDriver;
@@ -28,9 +30,15 @@ import org.apache.mesos.Protos.TaskStatus;
 import org.apache.mesos.Protos.ExecutorInfo;
 import org.apache.mesos.Protos.FrameworkInfo;
 import org.apache.mesos.Protos.TaskState;
+import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.Status;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MesosExecutor implements Executor {
+
+  private static final Log LOG = LogFactory.getLog(MesosExecutor.class);
 
   @Override
   public void registered(ExecutorDriver executorDriver,
@@ -38,7 +46,8 @@ public class MesosExecutor implements Executor {
                          FrameworkInfo frameworkInfo,
                          SlaveInfo slaveInfo) {
 
-    System.out.println("Registred executor on " + slaveInfo.getHostname());
+    String executorId = executorInfo.getExecutorId().getValue();
+    LOG.info("Registered with Mesos as executor ID " + executorId);
   }
 
   @Override
@@ -61,25 +70,62 @@ public class MesosExecutor implements Executor {
 
         executorDriver.sendStatusUpdate(status);
 
-        System.out.println("Running task " + taskInfo.getTaskId().getValue());
+        LOG.info("Running task " + taskInfo.getTaskId().getValue());
 
         // This is where one would perform the requested task.
 
+        startWorker(taskInfo);
 
-        status = TaskStatus.newBuilder()
-          .setTaskId(taskInfo.getTaskId())
-          .setState(TaskState.TASK_FINISHED).build();
-
-        executorDriver.sendStatusUpdate(status);
       } catch (Exception e) {
-        e.printStackTrace();
+        LOG.error(e.getMessage(), e);
       }
     }}.start();
   }
 
+  private void startWorker(TaskInfo taskInfo) {
+    String workerStartCmd = "bin/tajo-daemon.sh start worker";
+    List<String> resourceArgs = new ArrayList<>();
+    for (Resource resource : taskInfo.getResourcesList()) {
+      if (resource.getName().equals("cpus")) {
+        resourceArgs.add("--cpus:" + Integer.toString((int) resource.getScalar().getValue()));
+      } else if (resource.getName().equals("mem")) {
+        resourceArgs.add("--mem:" + Integer.toString((int) resource.getScalar().getValue()));
+      }
+    }
+
+    String cmd = String.join(" ", workerStartCmd, String.join(" ", resourceArgs));
+
+    runProcess(cmd);
+  }
+
+  private void stopWorker() {
+    String workerStopCmd = "bin/tajo-daemon.sh stop worker";
+
+    try {
+      runProcess(workerStopCmd);
+    } catch (Exception e) {
+      LOG.error(e.getMessage(), e);
+    }
+  }
+
+  private void runProcess(String command) {
+    Process pro;
+    try {
+      pro = Runtime.getRuntime().exec(command);
+      pro.waitFor();
+    } catch (Throwable e) {
+      LOG.error(e.getMessage(), e);
+    }
+  }
+
   @Override
   public void killTask(ExecutorDriver executorDriver, Protos.TaskID taskID) {
+    stopWorker();
+    TaskStatus status = TaskStatus.newBuilder()
+      .setTaskId(taskID)
+      .setState(TaskState.TASK_KILLED).build();
 
+    executorDriver.sendStatusUpdate(status);
   }
 
   @Override
@@ -89,12 +135,12 @@ public class MesosExecutor implements Executor {
 
   @Override
   public void shutdown(ExecutorDriver executorDriver) {
-
+    stopWorker();
   }
 
   @Override
   public void error(ExecutorDriver executorDriver, String s) {
-
+    LOG.error("Error from Mesos: " + s);
   }
 
   public static void main(String[] args) {
