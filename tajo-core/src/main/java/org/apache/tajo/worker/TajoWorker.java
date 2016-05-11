@@ -125,10 +125,10 @@ public class TajoWorker extends CompositeService {
     Arrays.stream(this.cmdArgs).forEach(arg -> {
       if (arg.contains("cpus")) {
         this.systemConf.setIntVar(TajoConf.ConfVars.WORKER_RESOURCE_AVAILABLE_CPU_CORES,
-          Integer.valueOf(arg.split(":")[1]));
+          Integer.valueOf(arg.split("=")[1]));
       } else if (arg.contains("mem")) {
         this.systemConf.setIntVar(TajoConf.ConfVars.WORKER_RESOURCE_AVAILABLE_MEMORY_MB,
-          Integer.valueOf(arg.split(":")[1]));
+          Integer.valueOf(arg.split("=")[1]));
       }
     });
 

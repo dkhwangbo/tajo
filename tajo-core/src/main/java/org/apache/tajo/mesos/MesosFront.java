@@ -25,6 +25,7 @@ import org.apache.mesos.Protos.ExecutorID;
 import org.apache.mesos.Protos.FrameworkInfo;
 import org.apache.mesos.Protos.Status;
 import org.apache.mesos.Scheduler;
+import org.apache.tajo.conf.TajoConf;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -36,22 +37,17 @@ public class MesosFront {
     Field fieldSysPath = ClassLoader.class.getDeclaredField("sys_paths");
     fieldSysPath.setAccessible(true);
     fieldSysPath.set(null, null);
-//    TajoConf tajoConf = new TajoConf();
-//    tajoConf.setVar(TajoConf.ConfVars.TAJO_MESOS_URI, "hdfs://localhost:9000/tajo-0.12.0-SNAPSHOT.tar.gz");
-//    String uri = tajoConf.getVar(TajoConf.ConfVars.TAJO_MESOS_URI);
+
     String uri = "hdfs://localhost:9000/tajo-0.12.0-SNAPSHOT.tar.gz";
-    String executorCommand = "export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_77.jdk/Contents/Home; cd tajo-0.12*; bin/tajo org.apache.tajo.mesos.MesosExecutor";
+    String executorCommand = "cd tajo-0.12*; bin/tajo org.apache.tajo.mesos.MesosExecutor";
+
     ExecutorInfo executor = ExecutorInfo.newBuilder()
       .setExecutorId(ExecutorID.newBuilder().setValue("default"))
       .setCommand(CommandInfo.newBuilder().addUris(CommandInfo.URI.newBuilder().setValue(uri.trim()))
         .setValue(executorCommand))
       .setName("Test Executor").setSource("test").build();
-    FrameworkInfo.Builder frameworkBuilder = FrameworkInfo.newBuilder()
-      .setUser("dk").setName("Test Framework");
-//      .setCheckpoint(true);
+    FrameworkInfo.Builder frameworkBuilder = FrameworkInfo.newBuilder().setUser("dk").setName("Test Framework");
 
-//    boolean implicitAcknowledgements = true;
-//    Scheduler scheduler = new MesosScheduler(implicitAcknowledgements, executor);
     Scheduler scheduler = new MesosScheduler(executor);
 
     String masterUri = "127.0.0.1:5050";
@@ -61,8 +57,5 @@ public class MesosFront {
     driver.stop();
     Thread.sleep(500);
     System.exit(status);
-
-//    Protos.CommandInfo.Builder builder = Protos.CommandInfo.newBuilder().addUris(Protos.CommandInfo.URI.newBuilder().setValue(uri.trim()));
-//    builder.build();
   }
 }

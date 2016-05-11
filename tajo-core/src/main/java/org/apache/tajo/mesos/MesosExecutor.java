@@ -30,7 +30,6 @@ import org.apache.mesos.Protos.TaskStatus;
 import org.apache.mesos.Protos.ExecutorInfo;
 import org.apache.mesos.Protos.FrameworkInfo;
 import org.apache.mesos.Protos.TaskState;
-import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.Status;
 
 import java.util.ArrayList;
@@ -39,6 +38,11 @@ import java.util.List;
 public class MesosExecutor implements Executor {
 
   private static final Log LOG = LogFactory.getLog(MesosExecutor.class);
+  private final String scriptName = "tajo-daemon.sh";
+  private final String scriptPath = "bin/" + scriptName;
+  private final String commandStart = "start";
+  private final String commandStop = "stop";
+  private final String indicatorWorker = "worker";
 
   @Override
   public void registered(ExecutorDriver executorDriver,
@@ -83,15 +87,16 @@ public class MesosExecutor implements Executor {
   }
 
   private void startWorker(TaskInfo taskInfo) {
-    String workerStartCmd = "bin/tajo-daemon.sh start worker";
+    LOG.info("Start worker on Mesos");
+    String workerStartCmd = String.join(" ", scriptPath, commandStart, indicatorWorker);
     List<String> resourceArgs = new ArrayList<>();
-    for (Resource resource : taskInfo.getResourcesList()) {
+    taskInfo.getResourcesList().forEach(resource -> {
       if (resource.getName().equals("cpus")) {
-        resourceArgs.add("--cpus:" + Integer.toString((int) resource.getScalar().getValue()));
+        resourceArgs.add("--cpus=" + Integer.toString((int) resource.getScalar().getValue()));
       } else if (resource.getName().equals("mem")) {
-        resourceArgs.add("--mem:" + Integer.toString((int) resource.getScalar().getValue()));
+        resourceArgs.add("--mem=" + Integer.toString((int) resource.getScalar().getValue()));
       }
-    }
+    });
 
     String cmd = String.join(" ", workerStartCmd, String.join(" ", resourceArgs));
 
@@ -99,7 +104,8 @@ public class MesosExecutor implements Executor {
   }
 
   private void stopWorker() {
-    String workerStopCmd = "bin/tajo-daemon.sh stop worker";
+    LOG.info("Stop worker on Mesos");
+    String workerStopCmd = String.join(" ", scriptPath, commandStop, indicatorWorker);
 
     try {
       runProcess(workerStopCmd);
@@ -109,6 +115,7 @@ public class MesosExecutor implements Executor {
   }
 
   private void runProcess(String command) {
+    LOG.info("Run this command : " + command);
     Process pro;
     try {
       pro = Runtime.getRuntime().exec(command);
